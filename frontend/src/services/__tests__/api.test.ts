@@ -35,16 +35,34 @@ describe('api service', () => {
       .rejects.toThrow('Alias already taken.');
   });
 
-  it('listAll sends GET to /urls', async () => {
+  it('listAll sends GET to /urls and returns the page', async () => {
+    const mockPageResponse = {
+      urls: [{ alias: 'abc', fullUrl: 'https://ex.com', shortUrl: 'http://host/abc' }],
+      totalElements: 6, totalPages: 2, number: 0, size: 5, first: true, last: false,
+    };
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => [],
+      json: async () => mockPageResponse,
     } as Response);
 
-    await api.listAll();
+    const page = await api.listAll();
 
-    expect(fetch).toHaveBeenCalledWith('/urls');
+    expect(fetch).toHaveBeenCalledWith('/urls?page=0');
+    expect(page.urls).toHaveLength(1);
+    expect(page.totalElements).toBe(6);
+  });
+
+  it('listAll passes page and size as query params', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ urls: [], totalElements: 0 }),
+    } as Response);
+
+    await api.listAll(2, 10);
+
+    expect(fetch).toHaveBeenCalledWith('/urls?page=2&size=10');
   });
 
   it('delete sends DELETE to /{alias}', async () => {

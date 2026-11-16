@@ -8,6 +8,8 @@ export default defineConfig({
     proxy: {
       '/shorten': 'http://localhost:8080',
       '/urls': 'http://localhost:8080',
+      // DELETE /{alias} (and GET /{alias} redirects). Same character rule as the backend's
+      '^/[A-Za-z0-9-]{2,64}$': 'http://localhost:8080',
     },
   },
   test: {

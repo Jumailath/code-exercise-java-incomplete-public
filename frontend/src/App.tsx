@@ -2,10 +2,13 @@ import { useUrlShortener } from './hooks/useUrlShortener';
 import { ShortenForm } from './components/ShortenForm';
 import { ResultBanner } from './components/ResultBanner';
 import { UrlTable } from './components/UrlTable';
+import { Pagination } from './components/Pagination';
 
 export default function App() {
-  const { urls, loading, error, lastCreated, shorten, deleteUrl, clearLastCreated } =
-    useUrlShortener();
+  const {
+    urls, totalCount, page, totalPages, loading, error, lastCreated,
+    shorten, deleteUrl, goToPage, clearLastCreated,
+  } = useUrlShortener();
 
   return (
     <div className="app">
@@ -40,8 +43,8 @@ export default function App() {
         <section className="card" aria-labelledby="list-heading">
           <h2 id="list-heading" className="card__title">
             All shortened URLs
-            {urls.length > 0 && (
-              <span className="badge">{urls.length}</span>
+            {totalCount > 0 && (
+              <span className="badge">{totalCount}</span>
             )}
           </h2>
 
@@ -52,6 +55,13 @@ export default function App() {
           ) : (
             <UrlTable urls={urls} onDelete={deleteUrl} />
           )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            disabled={loading}
+          />
         </section>
       </main>
 
