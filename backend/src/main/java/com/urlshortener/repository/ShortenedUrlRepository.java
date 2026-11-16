@@ -35,7 +35,7 @@ public class ShortenedUrlRepository {
                 "SELECT COUNT(1) FROM shortened_urls WHERE alias = ?",
                 Integer.class,
                 alias);
-        return count != null && count > 0;
+        return count > 0;
     }
 
     public void save(String alias, String fullUrl, Instant createdAt) {
@@ -50,9 +50,15 @@ public class ShortenedUrlRepository {
         return results.stream().findFirst();
     }
 
-    public List<UrlListItem> findAll(String baseUrl) {
-        return jdbc.query("SELECT alias, full_url FROM shortened_urls",
-                urlListItemMapper(baseUrl));
+    public List<UrlListItem> findAll(String baseUrl, int limit, long offset) {
+        return jdbc.query("SELECT alias, full_url FROM shortened_urls ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
+                urlListItemMapper(baseUrl),
+                limit, offset);
+    }
+
+    public long count() {
+        Long count = jdbc.queryForObject("SELECT COUNT(1) FROM shortened_urls", Long.class);
+        return count == null ? 0 : count;
     }
 
     public boolean deleteByAlias(String alias) {

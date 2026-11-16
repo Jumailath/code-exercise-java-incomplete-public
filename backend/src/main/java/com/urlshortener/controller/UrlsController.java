@@ -2,24 +2,21 @@ package com.urlshortener.controller;
 
 import com.urlshortener.model.ShortenUrlRequest;
 import com.urlshortener.model.ShortenUrlResponse;
-import com.urlshortener.model.UrlListItem;
+import com.urlshortener.model.UrlPage;
 import com.urlshortener.service.UrlShortenerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
-@org.springframework.web.bind.annotation.CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
+@org.springframework.web.bind.annotation.CrossOrigin(
+        origins = {"http://localhost:3000", "http://localhost:5173"})
 public class UrlsController {
 
     private final UrlShortenerService service;
@@ -29,16 +26,22 @@ public class UrlsController {
     }
 
     @PostMapping("/shorten")
-    public ResponseEntity<Void> shorten(
+    public ResponseEntity<ShortenUrlResponse> shorten(
             @Valid @RequestBody ShortenUrlRequest request,
             HttpServletRequest requestContext) {
-        return ResponseEntity.ok().build();
+        var baseUrl = getBaseUrl(requestContext);
+        var shortenedUrlResponse = service.shorten(request, baseUrl);
+        return ResponseEntity.status(HttpStatus.CREATED).body(shortenedUrlResponse);
     }
 
     @GetMapping("/urls")
-    public List<UrlListItem> getAll(HttpServletRequest requestContext) {
+    public ResponseEntity<UrlPage> getAll(
+            @PageableDefault(size = 5) Pageable pageable,
+            HttpServletRequest requestContext) {
         var baseUrl = getBaseUrl(requestContext);
-        return service.getAll(baseUrl);
+        var urlListItemPage = service.getAll(pageable, baseUrl);
+        return ResponseEntity.ok()
+                .body(UrlPage.map(urlListItemPage));
     }
 
     @GetMapping("/{alias}")
